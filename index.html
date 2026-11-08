@@ -90,6 +90,7 @@ table.books td.n{font:12px var(--f-mono);color:var(--muted);padding:0 6px;text-a
 table.books td.c{width:1%;padding:0 6px}
 table.books input.cell{width:100%;min-width:90px;border:0;background:transparent;padding:8px 6px}
 table.books input.cell[data-f="acc"]{font-family:var(--f-mono);font-size:12.5px}
+table.books input.copies:disabled{opacity:.45;cursor:not-allowed}
 table.books input.copies{width:54px;border:0;background:transparent;padding:8px 6px;font-family:var(--f-mono);text-align:right}
 table.books input:focus{outline:2px solid var(--accent);outline-offset:-2px;background:var(--surface)}
 .del{border:0;background:none;color:var(--muted);cursor:pointer;font-size:17px;line-height:1;padding:6px 8px;border-radius:4px}
@@ -182,7 +183,7 @@ textarea{min-height:180px;font:12.5px var(--f-mono);resize:vertical}
 .start-head .hl{background:none;padding:0}
 :root[data-theme="dark"] .start-head{color:#e7e9ef}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .start-head{color:#e7e9ef}}
-.work.starting .startview{display:flex;flex-direction:column;gap:clamp(44px,8vh,72px);flex:1;align-items:center;justify-content:center;min-height:calc(100vh - 170px);padding:24px 16px}
+.work.starting .startview{display:flex;flex-direction:column;gap:clamp(44px,8vh,72px);flex:1;align-items:center;justify-content:center;min-height:calc(100vh - 215px);padding:24px 16px}
 .startbtn{width:212px;height:212px;max-width:60vw;max-height:60vw;border-radius:50%;border:0;cursor:pointer;background:var(--brand);color:#fff;font:400 30px/1 'Archivo',system-ui,sans-serif;letter-spacing:.01em;
   box-shadow:0 0 0 5px #ffffff,0 0 0 9px var(--start-ring),0 14px 34px rgba(20,30,50,.28);transition:transform .18s ease,box-shadow .18s ease}
 @keyframes startPulse{0%{transform:scale(1);box-shadow:0 0 0 5px #fff,0 0 0 9px var(--start-ring),0 0 0 9px rgba(242,165,22,.55),0 14px 34px rgba(20,30,50,.28)}50%{transform:scale(1.04)}70%{box-shadow:0 0 0 5px #fff,0 0 0 9px var(--start-ring),0 0 0 30px rgba(242,165,22,0),0 14px 34px rgba(20,30,50,.28)}100%{transform:scale(1);box-shadow:0 0 0 5px #fff,0 0 0 9px var(--start-ring),0 0 0 30px rgba(242,165,22,0),0 14px 34px rgba(20,30,50,.28)}}
@@ -191,6 +192,12 @@ textarea{min-height:180px;font:12.5px var(--f-mono);resize:vertical}
 .startbtn:hover{transform:scale(1.04);box-shadow:0 0 0 5px #ffffff,0 0 0 9px var(--brand-gold),0 18px 40px rgba(20,30,50,.32)}
 .startbtn:active{transform:scale(.98)}
 .startbtn:focus-visible{outline:3px solid var(--brand-gold);outline-offset:12px}
+.copytip{position:fixed;z-index:70;background:var(--brand);color:#fff;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.4;box-shadow:0 10px 28px rgba(10,20,40,.28);display:flex;flex-direction:column;gap:4px;pointer-events:none}
+.copytip b{font-weight:700;color:var(--brand-gold)}
+.copytip .ex{font-family:var(--f-mono);font-size:11.5px;opacity:.92}
+.copytip::before{content:"";position:absolute;top:-6px;left:calc(var(--arrow,50%) - 6px);border:6px solid transparent;border-top:0;border-bottom-color:var(--brand)}
+.copytip.above::before{top:auto;bottom:-6px;border-bottom:0;border-top:6px solid var(--brand)}
+.foot{border-top:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:12px;text-align:center;padding-block:12px calc(12px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .toast-act{margin-left:12px;border:0;background:none;color:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:0}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;z-index:60;font-size:13px;max-width:calc(100vw - 32px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
 
@@ -378,6 +385,7 @@ textarea{min-height:180px;font:12.5px var(--f-mono);resize:vertical}
     <div class="sheetwrap"><div class="sheet" id="sheet"></div></div>
   </section>
 </main>
+<footer class="foot">© 2026 NDE Solutions. All rights reserved.</footer>
 
 <div class="overlay" id="mapDlg" hidden>
   <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="mapTitle">
@@ -457,7 +465,11 @@ const $=id=>document.getElementById(id);
 /* ---------- state ---------- */
 let S;
 function freshState(){return{cleanSa:true,design:clone(DEFAULT_DESIGN),page:clone(DEFAULT_PAGE),books:sampleBooks()}}
-function sampleBooks(){return EXAMPLES.map(r=>({id:uid(),values:{author:r[0],title:r[1],acc:r[2]},copies:1,example:true}))}
+function sampleBooks(){return EXAMPLES.map(r=>({id:uid(),values:{author:r[0],title:r[1],acc:r[2]},copies:1,example:true,imported:true}))}
+const effCopies=b=>b.imported?1:Math.max(0,Math.min(999,b.copies|0));
+function accFieldId(){const f=S.design.fields.find(f=>f.id==='acc')||S.design.fields.find(f=>SYN.acc.includes(norm(f.label)));return f?f.id:null}
+function nthAcc(v,i){v=String(v);if(!i)return v;const m=/(\d+)(?!.*\d)/.exec(v);if(!m)return v+'-'+(i+1);const n=String(parseInt(m[1],10)+i).padStart(m[1].length,'0');return v.slice(0,m.index)+n+v.slice(m.index+m[1].length)}
+function cardValues(b,i){if(!i||b.imported)return b.values;const id=accFieldId();if(!id||!b.values[id])return b.values;return Object.assign({},b.values,{[id]:nthAcc(b.values[id],i)})}
 function load(){try{const raw=localStorage.getItem('bcm.v1');if(!raw)return null;const s=JSON.parse(raw);if(!s||!s.design||!s.books)return null;if(!s.design.nameFont){s.design.nameAt='beside';if(!(s.design.nameSize>9))s.design.nameSize=14}s.design=Object.assign(clone(DEFAULT_DESIGN),s.design);if(!s.cleanSa){const bad=s.design.fields.filter(f=>String(f.label).trim().toLowerCase()==='sa');if(bad.length){s.design.fields=s.design.fields.filter(f=>!bad.includes(f));s.books.forEach(b=>bad.forEach(f=>{if(b.values)delete b.values[f.id]}))}s.cleanSa=true}s.page=Object.assign(clone(DEFAULT_PAGE),s.page||{});if(typeof s.design.logo==='string'&&s.design.logo.indexOf(OLD_LOGO_SIG)===22){s.design.logo=DEFAULT_LOGO;s.design.logoAspect=DEFAULT_LOGO_ASPECT;s.design.logoHeight=9.5}return s}catch(e){return null}}
 let saveT=null;
 function persist(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('bcm.v1',JSON.stringify(S))}catch(e){}},400)}
@@ -591,13 +603,13 @@ function sheetOps(d,p,cards){
 function booksInScope(selectedOnly){return selectedOnly?S.books.filter(b=>UI.sel.has(b.id)):S.books}
 function flatCards(selectedOnly){
   const cards=[];
-  for(const b of booksInScope(selectedOnly)){const n=Math.max(0,Math.min(999,b.copies|0));for(let i=0;i<n;i++)cards.push({id:b.id,values:b.values})}
+  for(const b of booksInScope(selectedOnly)){const n=effCopies(b);for(let i=0;i<n;i++)cards.push({id:b.id,values:cardValues(b,i)})}
   for(let i=0;i<(S.page.blanks|0);i++)cards.push({id:null,values:{}});
   return cards;
 }
 function buildSheets(selectedOnly,forPreview){
   const p=S.page,L=sheetLayout(S.design,p),cards=[];
-  for(const b of booksInScope(selectedOnly)){const n=Math.max(0,Math.min(999,b.copies|0));for(let i=0;i<n;i++)cards.push({id:b.id,values:b.values})}
+  for(const b of booksInScope(selectedOnly)){const n=effCopies(b);for(let i=0;i<n;i++)cards.push({id:b.id,values:cardValues(b,i)})}
   for(let i=0;i<(p.blanks|0);i++)cards.push({id:null,values:{}});
   if(!cards.length&&forPreview){for(let i=0;i<L.per;i++)cards.push({id:null,values:{}})}
   if(p.fillSheet&&cards.length%L.per)while(cards.length%L.per)cards.push({id:null,values:{}});
@@ -657,7 +669,7 @@ function renderPreview(){
 let pvT=null;
 function schedule(){clearTimeout(pvT);pvT=setTimeout(renderPreview,90);persist()}
 function updateCounts(){
-  const cards=S.books.reduce((a,b)=>a+Math.max(0,b.copies|0),0)+(S.page.blanks|0);
+  const cards=S.books.reduce((a,b)=>a+effCopies(b),0)+(S.page.blanks|0);
   const per=sheetLayout(S.design,S.page).per;
   const sheets=Math.ceil(cards/per)||0;
   $('counts').textContent=`${S.books.length} book${S.books.length===1?'':'s'} · ${cards} card${cards===1?'':'s'} · ${sheets} sheet${sheets===1?'':'s'}`;
@@ -675,7 +687,7 @@ function renderBooks(){
     if(q&&!d.fields.some(f=>String(b.values[f.id]||'').toLowerCase().includes(q)))return;
     rows.push(`<tr data-id="${b.id}"${UI.focus===b.id?' class="focus"':''}><td class="c"><input type="checkbox" class="sel" aria-label="Select row ${i+1}"${UI.sel.has(b.id)?' checked':''}></td><td class="n">${i+1}</td>`+
       d.fields.map(f=>`<td><input class="cell" data-f="${esc(f.id)}" value="${esc(b.values[f.id]||'')}" aria-label="${esc(f.label)}"></td>`).join('')+
-      `<td><input class="copies" type="number" min="0" max="999" value="${b.copies|0}" aria-label="Copies"></td><td class="c"><button class="del" aria-label="Delete book" title="Delete">×</button></td></tr>`);
+      (b.imported?`<td><input class="copies" type="number" value="1" disabled aria-label="Copies (fixed for imported books)" title="Imported books keep their own Acc. # — one card each"></td>`:`<td><input class="copies" type="number" min="0" max="999" value="${b.copies|0}" aria-label="Copies" title="Each extra copy gets the next Acc. # (e.g. 2025-001, 2025-002…)"></td>`)+`<td class="c"><button class="del" aria-label="Delete book" title="Delete">×</button></td></tr>`);
   });
   tb.innerHTML=rows.join('');
   $('emptyBooks').hidden=true;
@@ -698,6 +710,24 @@ tb.addEventListener('input',e=>{
   else if(e.target.classList.contains('copies'))b.copies=Math.max(0,Math.min(999,parseInt(e.target.value,10)||0));
   schedule();
 });
+/* copies info pop-up */
+const copyTip=document.createElement('div');copyTip.className='copytip';copyTip.hidden=true;copyTip.setAttribute('role','status');document.body.appendChild(copyTip);
+function showCopyTip(inp){
+  const b=bookOf(inp);if(!b||b.imported){copyTip.hidden=true;return}
+  const n=effCopies(b),id=accFieldId(),acc=id&&b.values[id];
+  let h='<b>Each copy gets its own Acc. #</b><span>Adding more than one copy numbers them automatically by continuing the last digits of the Acc. #.</span>';
+  if(n>1&&acc){const list=n<=4?Array.from({length:n},(_,i)=>nthAcc(acc,i)):[nthAcc(acc,0),nthAcc(acc,1),'…',nthAcc(acc,n-1)];h+=`<span class="ex">${n} copies → ${list.map(x=>`<span style="white-space:nowrap">${esc(x)}</span>`).join(', ')}</span>`}
+  else if(n>1)h+='<span class="ex">Type an Acc. # first (e.g. 2025-001) to number the copies.</span>';
+  else h+='<span class="ex">e.g. 2025-001 × 3 copies → 2025-001, 2025-002, 2025-003</span>';
+  copyTip.innerHTML=h;copyTip.hidden=false;
+  const r=inp.getBoundingClientRect(),w=Math.min(300,window.innerWidth-24);copyTip.style.width=w+'px';
+  const left=Math.max(12,Math.min(r.right-w,window.innerWidth-w-12));copyTip.style.left=left+'px';copyTip.style.setProperty('--arrow',(r.left+r.width/2-left)+'px');
+  const below=r.bottom+10+copyTip.offsetHeight<window.innerHeight;copyTip.classList.toggle('above',!below);copyTip.style.top=(below?r.bottom+10:r.top-10-copyTip.offsetHeight)+'px';
+}
+tb.addEventListener('focusin',e=>{if(e.target.classList.contains('copies'))showCopyTip(e.target)});
+tb.addEventListener('input',e=>{if(e.target.classList.contains('copies'))showCopyTip(e.target)});
+tb.addEventListener('focusout',e=>{if(e.target.classList.contains('copies'))copyTip.hidden=true});
+window.addEventListener('scroll',()=>{copyTip.hidden=true},true);
 tb.addEventListener('change',e=>{
   if(!e.target.classList.contains('sel'))return;const b=bookOf(e.target);if(!b)return;
   e.target.checked?UI.sel.add(b.id):UI.sel.delete(b.id);updateSel();
@@ -711,8 +741,8 @@ tb.addEventListener('focusin',e=>{
   tb.querySelectorAll('tr.focus').forEach(t=>t.classList.remove('focus'));e.target.closest('tr').classList.add('focus');
   UI.focus=b.id;
   const per=sheetLayout(S.design,S.page).per;let idx=0;
-  for(const x of S.books){if(x===b)break;idx+=Math.max(0,x.copies|0)}
-  if(b.copies>0){UI.sheet=Math.floor(idx/per);UI.card=idx}
+  for(const x of S.books){if(x===b)break;idx+=effCopies(x)}
+  if(effCopies(b)>0){UI.sheet=Math.floor(idx/per);UI.card=idx}
   renderPreview();
 });
 function takeColEdit(){const ed=$('books').tHead.querySelector('.thedit');if(ed&&UI.editField===ed.dataset.ef){const f=S.design.fields.find(x=>x.id===ed.dataset.ef);if(f)f.label=ed.value.trim()||'New column';UI.editField=null}}
@@ -1085,7 +1115,6 @@ const SYN={author:['author','authors','authorname','authorsname','by','writer','
 const COPY_SYN=['copies','copy','qty','quantity','noofcopies','numberofcopies','cards'];
 function guessTarget(h){
   const n=norm(h);if(!n)return'skip';
-  if(COPY_SYN.includes(n))return'copies';
   for(const f of S.design.fields){if(norm(f.label)===n||norm(f.id)===n)return'f:'+f.id;if(SYN[f.id]&&SYN[f.id].includes(n))return'f:'+f.id}
   return'skip';
 }
@@ -1100,7 +1129,7 @@ function drawMapper(){
   const{rows,width,source}=MAP,hdr=$('mapHeader').checked;
   const data=hdr?rows.slice(1):rows;
   $('mapSub').textContent=`${data.length} row${data.length===1?'':'s'} from ${source}. Pick where each column goes.`;
-  const opts=(sel,h)=>['<option value="skip">Don’t import</option>'].concat(S.design.fields.map(f=>`<option value="f:${esc(f.id)}"${sel==='f:'+f.id?' selected':''}>${esc(f.label)}</option>`),[`<option value="copies"${sel==='copies'?' selected':''}>Copies</option>`,`<option value="new">New card field (name it →)</option>`]).join('');
+  const opts=(sel,h)=>['<option value="skip">Don’t import</option>'].concat(S.design.fields.map(f=>`<option value="f:${esc(f.id)}"${sel==='f:'+f.id?' selected':''}>${esc(f.label)}</option>`),[`<option value="new">New card field (name it →)</option>`]).join('');
   let html='<tr><th>Column</th><th>First value</th><th>Goes to</th></tr>';
   for(let c=0;c<width;c++){
     const h=hdr?String(rows[0][c]||'').trim():'';
@@ -1121,8 +1150,8 @@ function applyMap(replace){
   if(!targets.some(x=>x.t.startsWith('f:'))){toast('Choose at least one column to import.');return}
   const add=[];
   for(const r of data){
-    const b={id:uid(),values:{},copies:1};let any=false;
-    for(const x of targets){const v=String(r[x.c]==null?'':r[x.c]).trim();if(x.t==='copies'){const n=parseInt(v,10);if(isFinite(n))b.copies=Math.max(0,Math.min(999,n))}else if(x.t.startsWith('f:')&&v){b.values[x.t.slice(2)]=v;any=true}}
+    const b={id:uid(),values:{},copies:1,imported:true};let any=false;
+    for(const x of targets){const v=String(r[x.c]==null?'':r[x.c]).trim();if(x.t.startsWith('f:')&&v){b.values[x.t.slice(2)]=v;any=true}}
     if(any)add.push(b);
   }
   if(replace){S.books=add;UI.sel.clear();UI.focus=null}else{S.books=S.books.filter(b=>!b.example).concat(add)}
@@ -1164,8 +1193,8 @@ const ACTIONS={
   'imp-file':()=>$('fileData').click(),
   'imp-json':()=>$('fileJson').click(),
   'imp-paste':()=>{$('pasteDlg').hidden=false;$('pasteBox').focus()},
-  'sample-csv':()=>{const F=DEFAULT_DESIGN.fields;saveFile('sample-book-list.csv',toCSV([F.map(f=>f.label).concat(['Copies'])].concat(EXAMPLES.map((r,i)=>r.concat([i%4===0?2:1])))))},
-  'tpl-csv':()=>saveFile('book-card-import-template.csv',toCSV([S.design.fields.map(f=>f.label).concat(['Copies'])])),
+  'sample-csv':()=>{const F=DEFAULT_DESIGN.fields;saveFile('sample-book-list.csv',toCSV([F.map(f=>f.label)].concat(EXAMPLES)))},
+  'tpl-csv':()=>saveFile('book-card-import-template.csv',toCSV([S.design.fields.map(f=>f.label)])),
   'exp-pdf':async()=>{const sh=buildSheets(scopeSel(),false);if(!sh.length){toast('Add books (or blank cards) before exporting.');return}toast(`Building ${sh.length}-sheet PDF…`);try{await saveFile(`book-cards-${stamp()}.pdf`,await buildPdf(sh))}catch(e){console.error(e);toast('The PDF could not be built.')}},
   'exp-docx':async()=>{if(!needZip())return;const sh=buildSheets(scopeSel(),false);if(!sh.length){toast('Add books (or blank cards) before exporting.');return}toast(`Building ${sh.length}-page Word file…`);try{await saveFile(`book-cards-${stamp()}.docx`,await buildDocx(sh))}catch(e){console.error(e);toast('The Word file could not be built.')}},
   'exp-xlsx':async()=>{if(!needZip())return;await saveFile(`book-list-${stamp()}.xlsx`,await buildXlsx(listRows(scopeSel())))},
