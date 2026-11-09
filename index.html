@@ -1455,7 +1455,7 @@ $('howtoDlg').addEventListener('click',e=>{if(e.target===$('howtoDlg'))$('howtoD
 /* ---------- start screen ---------- */
 function showStart(){const w=document.querySelector('.work');w.classList.add('starting');toggleMenu(null);window.scrollTo(0,0)}
 {const bar=document.querySelector('.bar');bar.title='Back to start';bar.setAttribute('role','button');bar.tabIndex=0;bar.addEventListener('click',showStart);bar.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();showStart()}})}
-$('startBtn').addEventListener('click',()=>{document.querySelector('.tab[data-tab="books"]').click()});
+$('startBtn').addEventListener('click',()=>{document.querySelector('.tab[data-tab="design"]').click()});
 
 /* ---------- boot ---------- */
 $('brandLogo').src=DEFAULT_LOGO;
