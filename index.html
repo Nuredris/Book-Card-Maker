@@ -198,6 +198,9 @@ textarea{min-height:180px;font:12.5px var(--f-mono);resize:vertical}
 .copytip::before{content:"";position:absolute;top:-6px;left:calc(var(--arrow,50%) - 6px);border:6px solid transparent;border-top:0;border-bottom-color:var(--brand)}
 .copytip.above::before{top:auto;bottom:-6px;border-bottom:0;border-top:6px solid var(--brand)}
 .foot{border-top:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:12px;text-align:center;padding-block:12px calc(12px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.howto h2{margin:0 0 10px;font:700 17px/1.2 'Archivo',system-ui,sans-serif;text-transform:uppercase;letter-spacing:.01em;color:var(--ink)}
+.howto ul{margin:0;padding:12px 18px 12px 34px;background:var(--accent-soft);border-radius:10px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;line-height:1.5;color:var(--ink)}
+.howto li b{font-weight:700}
 .toast-act{margin-left:12px;border:0;background:none;color:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:0}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;z-index:60;font-size:13px;max-width:calc(100vw - 32px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
 
@@ -234,6 +237,18 @@ textarea{min-height:180px;font:12.5px var(--f-mono);resize:vertical}
 
     <!-- BOOKS -->
     <div class="pane" id="pane-books">
+      <section class="howto" aria-labelledby="howtoTitle">
+        <h2 id="howtoTitle">Instructions:</h2>
+        <ul>
+          <li><b>Set up the card first:</b> open <b>Design</b> to set the form number, logo, library name (beside the logo, below the form number or below the logo), card title, book fields and borrower log. Use <b>Import Design</b> to copy a layout from a Word, PDF or Excel file, or <b>Reset to template</b> to return to LIB-001. Choose <b>Import</b> to come back here.</li>
+          <li><b>Add books</b> with <b>+ Add book</b>, or <b>Import</b> a CSV or Excel (.xlsx) file. Use <b>Download Import Template</b> to get the right columns. After choosing a file, match each column to a card field, or pick <b>New card field</b> and give it a name.</li>
+          <li><b>Fill in the table cells</b> (Author, Title, Acc. # and any columns you add). Click a cell to type; changes save as you go. Click a row, then open <b>Design</b> to see that book’s card.</li>
+          <li><b>Columns:</b> the <b>+</b> at the end of the header adds a column, which also adds a row on the card and a column in the import template. Double-click a heading to rename it, or use its <b>×</b> to remove it (choose <b>Undo</b> to bring it back).</li>
+          <li><b>Copies</b> prints one card per copy for books you add by hand, continuing the last digits of the Acc. # (2025-001, 2025-002 and so on). Imported books keep their own Acc. # and print one card each.</li>
+          <li><b>Delete</b> one book with the <b>×</b> at the end of its row, or tick two or more rows (or the box in the header to select all) and choose <b>Delete selected</b>. <b>Load Samples</b> and <b>Remove Samples</b> add or clear the example books.</li>
+          <li><b>Export</b> shows the A4 sheet with 4 cards per page and 0.5 in margins. Adjust the paper, margins and cards per sheet there, then choose <b>Export ▾</b> to save a <b>PDF</b> or <b>Word</b> file. Print PDFs at <b>Actual size</b>.</li>
+        </ul>
+      </section>
       <div class="note" id="exampleNote" hidden><span><b>Sample books are loaded</b> so you can see the output. Import your list or add your own.</span></div>
       <div class="toolbar">
         <input class="search" id="search" type="search" placeholder="Search books…" aria-label="Search books">
@@ -300,7 +315,7 @@ textarea{min-height:180px;font:12.5px var(--f-mono);resize:vertical}
       <fieldset>
         <legend>Book fields</legend>
         <div class="list-ed" id="fieldsEd"></div>
-        <p class="hint">Each field becomes a row on the card and a column in your book list. “Lines” sets how tall the row is; long text shrinks to fit.</p>
+        <p class="hint">Each field becomes a row on the card, a column in the Import tab’s table and a column in the import template, and changes here update all three right away. “Lines” sets how tall the row is; long text shrinks to fit.</p>
       </fieldset>
       <fieldset>
         <legend>Borrower log</legend>
@@ -753,7 +768,7 @@ $('books').tHead.addEventListener('dblclick',e=>{const l=e.target.closest('[data
 $('books').tHead.addEventListener('pointerdown',e=>{
   if(e.button!==0)return;
   if(e.target.closest('#addCol,[data-rmf]'))takeColEdit();
-  if(e.target.closest('#addCol')){e.preventDefault();const id='f'+Math.random().toString(36).slice(2,7);S.design.fields.push({id,label:'New column',lines:1});UI.editField=id;renderBooks();schedule();renderPageStatus();return}
+  if(e.target.closest('#addCol')){e.preventDefault();const id='f'+Math.random().toString(36).slice(2,7);S.design.fields.push({id,label:'New column',lines:1});UI.editField=id;renderBooks();renderFieldsEd();fillSeriesFields();schedule();renderPageStatus();return}
   const b=e.target.closest('[data-rmf]');if(!b)return;e.preventDefault();
   const i=S.design.fields.findIndex(x=>x.id===b.dataset.rmf);if(i<0)return;
   const f=S.design.fields[i],saved=S.books.map(bk=>[bk,bk.values[f.id]]);
